@@ -2,6 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { redirect } from 'next/navigation'
+import { requireRole } from '@/lib/supabaseServer'
+import OwnerForm from './OwnerForm'   // your existing client form
+
+export default async function Page() {
+  const gate = await requireRole('owner')
+  if ('redirect' in gate) redirect(gate.redirect)
+  return <OwnerForm/>
+}
 
 type InsertStock = {
   product_key: string;
