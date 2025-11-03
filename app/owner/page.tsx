@@ -1,8 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
-import { CATALOG } from '@/lib/catalog'
-
+import { supabase } from '../../lib/supabaseClient'
+import { CATALOG } from '../../lib/catalog'
 const ACCOUNT_TYPES = ['shared_profile','solo_profile','shared_account','solo_account'] as const
 const TERM_OPTIONS = [
   {label:'7 days', days:7},{label:'14 days', days:14},
