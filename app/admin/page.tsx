@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { redirect } from 'next/navigation'
+import { requireRole } from '@/lib/supabaseServer'
+import AdminScreen from './AdminScreen'
 
+export default async function Page() {
+  const gate = await requireRole('admin')
+  if ('redirect' in gate) redirect(gate.redirect)
+  return <AdminScreen/>
+}
 type Row = {
   id: string;
   product_key: string;
