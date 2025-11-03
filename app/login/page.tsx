@@ -1,6 +1,7 @@
 'use client'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { supabase } from '../../lib/supabaseClient'
+import { CATALOG } from '../../lib/catalog'
 import { useState, useEffect } from 'react'
 
 export default function LoginPage(){
