@@ -1,16 +1,15 @@
-# Aiax Stock Pro
+# Aiaxcart Premium Shop
 
-Pastel pink, classy stock & record system with Owner/Admin, holds, masked creds, CSV import/export, price presets, soft delete, sales with expiry bump.
+Next.js 14 (app dir) + Supabase stock manager.
 
-## Setup
-1) Create Supabase project. Copy `.env.example` to Vercel env.
-2) Run `supabase.sql` in SQL Editor.
-3) Create two users in Auth → Users. Insert roles into `profiles`.
-4) Deploy to Vercel.
+## Quick start
+1. Create project on Vercel, import this folder.
+2. Set env vars (already included in `.env.local` but add to Vercel too).
+3. In Supabase SQL editor, run the `supabase_setup.sql` from this repo.
+4. Deploy. Use **Login → Quick login** buttons.
 
-## Routes
-- `/` home
-- `/login?as=admin` or `/login?as=owner`
-- `/owner` add stocks, CSV import/export, soft-delete
-- `/admin` browse summary, hold/confirm reveal
-- `/admin/records` edit buyer/channel/amount/discount/+days
+## Pages
+- `/` Home (only Home + Login in header)
+- `/login` Login/Logout
+- `/admin` Admin panel (requires login)
+- `/owner` Owner panel (requires login)
