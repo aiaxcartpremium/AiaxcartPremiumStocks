@@ -13,10 +13,12 @@
     "react-dom": "18.2.0",
     "@supabase/supabase-js": "^2.45.3",
     "papaparse": "^5.4.1"
+    
   },
   "devDependencies": {
     "typescript": "^5.6.3",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18"
+    "@types/papaparse": "^5.3.14"
   }
 }
