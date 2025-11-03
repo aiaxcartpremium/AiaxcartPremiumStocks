@@ -1,122 +1,97 @@
+// app/admin/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { redirect } from 'next/navigation'
-import { requireRole } from '@/lib/supabaseServer'
-import AdminScreen from './AdminScreen'
 
-export default async function Page() {
-  const gate = await requireRole('admin')
-  if ('redirect' in gate) redirect(gate.redirect)
-  return <AdminScreen/>
-}
 type Row = {
-  id: string;
+  id: number;
   product_key: string;
   account_type: string;
-  term_days: number|null;
-  price: number|null;
-  expires_on: string|null;
-  quantity: number|null;
-};
-
-type Cred = {
-  email?: string|null;
-  password?: string|null;
-  profile?: string|null;
-  pin?: string|null;
-  product_key: string;
-  account_type: string;
-  expires_on: string|null;
+  term_days: number | null;
+  price: number | null;
+  expires_at: string | null;
+  qty: number | null;
 };
 
 export default function AdminPage() {
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState<Row[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  async function load() {
-    setLoading(true);
-    const { data, error } = await supabase
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      setUserId(auth.user?.id ?? null);
+
+      const { data, error } = await supabase
+        .from('stocks')
+        .select('id, product_key, account_type, term_days, price, expires_at, qty')
+        .order('expires_at', { ascending: true });
+
+      if (error) { alert(error.message); return; }
+      setRows(data ?? []);
+    })();
+  }, []);
+
+  async function getAccount(r: Row) {
+    if (!userId) return alert('No admin user');
+    setBusy(true);
+    const { data, error } = await supabase.rpc('grant_and_get_credentials', {
+      p_stock_id: r.id,
+      p_admin: userId,
+    });
+    setBusy(false);
+    if (error) return alert(error.message);
+
+    const cred = data?.[0];
+    if (!cred) { alert('No credentials returned'); return; }
+
+    const text = `Product: ${cred.product_key}
+Type: ${cred.account_type}
+Expires: ${new Date(cred.expires_at).toISOString().slice(0,10)}
+Email: ${cred.email ?? '-'}
+Pass: ${cred.pass ?? '-'}
+Profile: ${cred.profile ?? '-'}
+PIN: ${cred.pin ?? '-'}`;
+    try { await navigator.clipboard.writeText(text); } catch {}
+    alert('Credentials copied to clipboard.');
+
+    // refresh list (qty may have changed or row deleted)
+    const { data: refreshed } = await supabase
       .from('stocks')
-      .select('id,product_key,account_type,term_days,price,expires_on,quantity')
-      .order('product_key', { ascending: true });
-    setLoading(false);
-    if (error) return alert(error.message);
-    setRows((data as any[]) ?? []);
+      .select('id, product_key, account_type, term_days, price, expires_at, qty')
+      .order('expires_at', { ascending: true });
+    setRows(refreshed ?? []);
   }
 
-  useEffect(() => { load(); }, []);
-
-  async function getAccount(stockId: string) {
-    // This RPC must exist (see earlier messages). It should
-    //  - log to admin_grants
-    //  - return one credential
-    //  - decrement quantity or delete when 0
-    const { data, error } = await supabase.rpc('grant_account', { p_stock_id: stockId });
-    if (error) return alert(error.message);
-
-    const cred = data as Cred;
-    // Show once, not stored in list
-    alert(
-      [
-        `Product: ${cred.product_key}`,
-        `Type: ${cred.account_type}`,
-        `Expires: ${cred.expires_on ?? '-'}`,
-        `Email: ${cred.email ?? '-'}`,
-        `Password: ${cred.password ?? '-'}`,
-        `Profile: ${cred.profile ?? '-'}`,
-        `PIN: ${cred.pin ?? '-'}`,
-      ].join('\n')
-    );
-
-    // refresh list so qty reduces
-    await load();
-  }
+  if (!rows) return <main className="container"><p>Loading…</p></main>;
 
   return (
-    <main className="p-4 max-w-5xl mx-auto">
-      <h1 className="text-xl font-semibold mb-4">Admin Panel</h1>
-
-      {loading && <p>Loading…</p>}
-
-      <div className="overflow-x-auto bg-white/60 border rounded">
-        <table className="w-full text-sm">
+    <main className="container">
+      <h1 className="title">Admin Panel</h1>
+      {rows.length === 0 ? <p>No stocks yet</p> : (
+        <table className="table">
           <thead>
-            <tr className="text-left border-b">
-              <th className="p-2">Product</th>
-              <th className="p-2">Type</th>
-              <th className="p-2">Term</th>
-              <th className="p-2">Price</th>
-              <th className="p-2">Expires</th>
-              <th className="p-2">Qty</th>
-              <th className="p-2"></th>
+            <tr>
+              <th>Product</th><th>Type</th><th>Term</th><th>Price</th><th>Expires</th><th>Qty</th><th></th>
             </tr>
           </thead>
           <tbody>
-            {rows.map(r=>(
-              <tr key={r.id} className="border-b">
-                <td className="p-2">{r.product_key}</td>
-                <td className="p-2">{r.account_type}</td>
-                <td className="p-2">{r.term_days ?? '-'}</td>
-                <td className="p-2">{r.price ?? '-'}</td>
-                <td className="p-2">{r.expires_on ?? '-'}</td>
-                <td className="p-2">{r.quantity ?? 0}</td>
-                <td className="p-2">
-                  <button
-                    onClick={()=>getAccount(r.id)}
-                    className="rounded px-3 py-1 bg-pink-200 hover:bg-pink-300">
-                    Get Account
-                  </button>
-                </td>
+            {rows.map(r => (
+              <tr key={r.id}>
+                <td>{r.product_key}</td>
+                <td>{r.account_type}</td>
+                <td>{r.term_days ?? '-'}</td>
+                <td>{r.price ?? '-'}</td>
+                <td>{r.expires_at ? new Date(r.expires_at).toISOString().slice(0,10) : '-'}</td>
+                <td>{r.qty ?? 0}</td>
+                <td><button disabled={busy} onClick={()=>getAccount(r)}>Get Account</button></td>
               </tr>
             ))}
-            {rows.length === 0 && !loading && (
-              <tr><td className="p-3 text-center text-slate-500" colSpan={7}>No stocks yet</td></tr>
-            )}
           </tbody>
         </table>
-      </div>
+      )}
     </main>
   );
 }
