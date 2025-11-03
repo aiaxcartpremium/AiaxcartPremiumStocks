@@ -11,6 +11,7 @@ export default function SalesPage() {
   const [price, setPrice] = useState<string>('');
   const [buyerName, setBuyerName] = useState('');
   const [buyerContact, setBuyerContact] = useState('');
+  const [extraDays, setExtraDays] = useState<string>('0'); // NEW
 
   useEffect(() => {
     supabase.from('stocks')
@@ -23,6 +24,8 @@ export default function SalesPage() {
     const s = stocks.find(x => x.id === stockId);
     if (!s) return alert('Pick a stock');
 
+    // --- choose ONE path ---
+    // (A) If you kept the original record_sale (no extra days):
     const { data, error } = await supabase.rpc('record_sale', {
       p_stock_id: s.id,
       p_product_key: s.product_key,
@@ -33,62 +36,53 @@ export default function SalesPage() {
       p_buyer_name: buyerName || null,
       p_buyer_contact: buyerContact || null
     });
-
     if (error) return alert(error.message);
-    alert('Sale recorded: ' + data);
-    setStockId('');
-    setPrice('');
-    setBuyerName('');
-    setBuyerContact('');
+    const saleId: string = data as string;
+
+    // extend after insert if extraDays > 0
+    const addDays = Number(extraDays || '0');
+    if (addDays > 0) {
+      const { data: newExp, error: e2 } = await supabase.rpc('extend_sale_expiry', {
+        p_sale_id: saleId,
+        p_extra_days: addDays
+      });
+      if (e2) return alert(e2.message);
+      alert(`Sale recorded. New expiry: ${newExp}`);
+    } else {
+      alert('Sale recorded.');
+    }
+
+    // (B) If you replaced record_sale with the new version that has p_extra_days param:
+    // await supabase.rpc('record_sale', { ..., p_extra_days: Number(extraDays || '0') });
+
+    // reset
+    setStockId(''); setPrice(''); setBuyerName(''); setBuyerContact(''); setExtraDays('0');
   }
 
   return (
     <main className="p-4 max-w-3xl mx-auto">
       <h1 className="text-xl font-semibold mb-4">Record Sale</h1>
 
-      <label className="block text-sm mb-1">Stock</label>
-      <select
-        className="border rounded px-2 py-1 text-sm w-full mb-3"
-        value={stockId}
-        onChange={e => setStockId(e.target.value)}
-      >
-        <option value="">Select…</option>
-        {stocks.map(s => (
-          <option key={s.id} value={s.id}>
-            {s.product_key} • term: {s.term_days ?? '-'}d • exp: {s.expires_on ?? '-'}
-          </option>
-        ))}
-      </select>
+      {/* Stock select ... (same as before) */}
 
       <label className="block text-sm mb-1">Channel</label>
-      <select
-        className="border rounded px-2 py-1 text-sm w-full mb-3"
-        value={channel}
-        onChange={e => setChannel(e.target.value)}
-      >
-        <option value="tg">Telegram</option>
-        <option value="fb">Facebook</option>
-        <option value="ig">Instagram</option>
-        <option value="tiktok">TikTok</option>
-        <option value="other">Other</option>
-      </select>
+      {/* ... same channel select ... */}
 
       <label className="block text-sm mb-1">Sold price</label>
+      {/* ... same price input ... */}
+
+      {/* NEW: Additional days */}
+      <label className="block text-sm mb-1">Additional days (optional)</label>
       <input
         className="border rounded px-2 py-1 text-sm w-full mb-3"
         type="number"
-        value={price}
-        onChange={e => setPrice(e.target.value)}
-        placeholder="e.g. 99"
+        min={0}
+        value={extraDays}
+        onChange={(e) => setExtraDays(e.target.value)}
+        placeholder="e.g. 7"
       />
 
-      <label className="block text-sm mb-1">Buyer name (optional)</label>
-      <input className="border rounded px-2 py-1 text-sm w-full mb-3"
-             value={buyerName} onChange={e=>setBuyerName(e.target.value)} />
-
-      <label className="block text-sm mb-1">Buyer contact (optional)</label>
-      <input className="border rounded px-2 py-1 text-sm w-full mb-3"
-             value={buyerContact} onChange={e=>setBuyerContact(e.target.value)} />
+      {/* Buyer name/contact ... */}
 
       <button
         onClick={submit}
