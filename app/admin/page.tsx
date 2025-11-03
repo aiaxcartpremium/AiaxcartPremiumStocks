@@ -18,19 +18,36 @@ type Row = {
 export default function AdminPage(){
   const [rows,setRows] = useState<Row[]>([]);
   const [loading,setLoading] = useState(true);
+useEffect(() => {
+  let cancelled = false;
 
-  useEffect(()=>{
-    supabase.auth.getSession().then(async ({data})=>{
-      if(!data.session){ window.location.href = '/login?next=/admin'; return; }
-      const { data: stocks, error } = await supabase
-        .from('stocks')
-        .select('id,product_key,account_type,term,price,expires_at,qty')
-        .order('expires_at', { ascending: true });
-      if(error){ alert(error.message); return; }
-      setRows(stocks || []);
+  (async () => {
+    // 👇 no implicit-any errors
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      window.location.href = '/login?next=/admin';
+      return;
+    }
+
+    const { data: stocks, error } = await supabase
+      .from('stocks')
+      .select('id,product_key,account_type,term,price,expires_at,quantity')
+      .order('expires_at', { ascending: true });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    if (!cancelled) {
+      setRows(stocks ?? []);
       setLoading(false);
-    });
-  },[]);
+    }
+  })();
+
+  return () => { cancelled = true; };
+}, []);
 
   async function getAccount(id:string){
     const { data, error } = await supabase.rpc('admin_grant_and_decrement', { p_stock_id: id });
