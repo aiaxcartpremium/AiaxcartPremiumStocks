@@ -1,37 +1,43 @@
 :root{
-  --pink-1:#FFE5EC; /* Lavender Blush */
-  --pink-2:#FFB3C6; /* Pastel Pink */
-  --pink-3:#FF8FAB; /* Light Pink */
-  --pink-4:#FFC2D1; /* Pink Champagne */
-  --ink:#3a2433;
-  --muted:#6b4b59;
-  --bg:#fff7fa;
+  --lavender-blush:#FFE5EC;
+  --pink-champagne:#FFC2D1;
+  --pastel-pink:#FFB3C6;
+  --light-pink:#FF8FAB;
+  --ink:#3b2d35;
 }
-
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, 'Apple Color Emoji','Segoe UI Emoji'; background:var(--bg); color:var(--ink);}
-
-a{color:inherit;text-decoration:none}
-.container{max-width:1000px;margin:0 auto;padding:24px}
-
-.card{background:white;border:1px solid var(--pink-4);border-radius:16px; padding:20px; box-shadow:0 8px 20px rgba(255,179,198,.25);}
-
-.h1{font-size:42px; font-weight:900; letter-spacing:.2px; margin:24px 0}
-.h2{font-size:28px; font-weight:800; margin:18px 0}
-
-.row{display:flex;gap:12px;flex-wrap:wrap}
-.btn{padding:10px 18px;border-radius:16px;border:2px solid var(--pink-3); background:var(--pink-2); color:#2b1322; font-weight:800; cursor:pointer;}
-.btn.ghost{background:white;border-color:var(--pink-4)}
-.btn.link{background:transparent;border:none;padding:0;color:#7b2f54;cursor:pointer}
-.input, select{width:100%;padding:10px 12px;border-radius:12px;border:1.5px solid var(--pink-4); background:var(--pink-1)}
-.label{display:block;margin:14px 0 6px 4px;font-size:14px;color:var(--muted);font-weight:700}
-.badge{background:var(--pink-3);color:white;border-radius:999px;padding:4px 10px;font-weight:700}
-.table{width:100%;border-collapse:collapse;margin-top:8px}
-.table th,.table td{border-bottom:1px solid var(--pink-4);padding:10px;text-align:left}
-.header{background:linear-gradient(180deg,var(--pink-2),var(--pink-1)); border-bottom:1px solid var(--pink-4);}
-.nav{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:16px 24px;}
-.nav .left{font-weight:900}
-.pill{display:inline-block;padding:10px 16px;border-radius:16px;border:2px solid var(--pink-4); background:white; font-weight:800}
-.footer{padding:24px;color:var(--muted)}
-.helper{font-size:12px;color:#8a5a70}
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+  background: var(--lavender-blush);
+  color: var(--ink);
+}
+.header{
+  display:flex; gap:.75rem; align-items:center;
+  padding:1.2rem; max-width:980px; margin:0 auto;
+}
+.brand{font-weight:700; letter-spacing:.3px}
+.pill{
+  background: var(--pink-champagne); padding:.55rem 1.0rem; border-radius:999px;
+  border:1px solid #e5a8b7; text-decoration:none; color:var(--ink); font-weight:700;
+}
+.pill.ghost{ background:#fff; border-color:#eecad5; }
+.card{
+  background: #fff; border:1px solid #f3cbd7;
+  border-radius:18px; padding:1.2rem 1.4rem; box-shadow:0 10px 24px rgba(255,179,198,.25);
+}
+.container{max-width:980px; margin:1rem auto; padding:0 1rem}
+h1{font-size:2.2rem; margin: 1rem 0}
+label{display:block; font-weight:700; margin:.6rem 0 .25rem}
+select,input,button,textarea{
+  width:100%; padding:.7rem .8rem; border-radius:12px; border:1px solid #eab3c2;
+  outline:none; background:#fff; font-size:14px;
+}
+button{
+  cursor:pointer; font-weight:800;
+  background: var(--light-pink); border:1px solid #ff9eb2; color:#2b1f25;
+}
+.row{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
+@media (max-width:760px){ .row{grid-template-columns:1fr} }
+.center{display:flex; gap:.75rem; align-items:center}
