@@ -1,54 +1,38 @@
 :root{
-  --pink-50:#FFE5EC;    /* Lavender Blush */
-  --pink-200:#FFC2D1;   /* Pink Champagne */
-  --pink-300:#FFB3C6;   /* Pastel Pink */
-  --pink-400:#FF8FAB;   /* Light Pink */
-  --ink:#2a2a2a;
+  --lavender-blush:#FFE5EC;
+  --pastel-pink:#FFB3C6;
+  --light-pink:#FF8FAB;
+  --pink-champagne:#FFC2D1;
+  --ink:#2d1f26;
+  --card-bg:#fff;
+  --ring:#e9a9ba;
 }
-html,body{background:var(--pink-50);color:var(--ink);font-family:system-ui,Segoe UI,Roboto,Inter,sans-serif}
-.card{background:white;border:1px solid var(--pink-200);border-radius:16px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.04)}
-.pill{border-radius:20px;padding:10px 14px;border:1px solid var(--pink-200);background:#fff}
-.h1{font-size:34px;line-height:1.1;margin:18px 0}
-.h2{font-size:22px;margin:12px 0}
-.input,select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--pink-200);background:#fff}
-.row{display:grid;gap:12px}
-.actions{display:flex;gap:10px;flex-wrap:wrap}
-.btn{padding:10px 14px;border-radius:14px;border:1.5px solid var(--pink-300);background:var(--pink-300)}
-.btn.secondary{background:#fff}
-.back{margin-top:6px;display:inline-block}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-  background: var(--lavender-blush);
-  color: var(--ink);
-}
+
+html,body{background:var(--lavender-blush); color:var(--ink); margin:0; font-family:system-ui, Inter, ui-sans-serif;}
+
 .header{
-  display:flex; gap:.75rem; align-items:center;
-  padding:1.2rem; max-width:980px; margin:0 auto;
+  display:flex; gap:12px; align-items:center; padding:18px 20px;
 }
-.brand{font-weight:700; letter-spacing:.3px}
-.pill{
-  background: var(--pink-champagne); padding:.55rem 1.0rem; border-radius:999px;
-  border:1px solid #e5a8b7; text-decoration:none; color:var(--ink); font-weight:700;
+.brand{font-weight:800; font-size:20px;}
+
+.btn{
+  border:none; padding:10px 18px; border-radius:16px; cursor:pointer;
+  background:var(--pastel-pink); color:#1c0f14; font-weight:700;
+  box-shadow:0 2px 0 #00000010 inset, 0 6px 18px #ff8fab33;
 }
-.pill.ghost{ background:#fff; border-color:#eecad5; }
+.btn.ghost{background:#fff; border:1px solid var(--ring);}
+.btn.pill{border-radius:999px}
+.link{color:#1c0f14; font-weight:800; text-decoration:none}
+.container{max-width:880px; margin:0 auto; padding:16px}
 .card{
-  background: #fff; border:1px solid #f3cbd7;
-  border-radius:18px; padding:1.2rem 1.4rem; box-shadow:0 10px 24px rgba(255,179,198,.25);
+  background:var(--card-bg); border:1px solid var(--pink-champagne);
+  border-radius:18px; padding:18px; box-shadow:0 20px 60px #00000006;
 }
-.container{max-width:980px; margin:1rem auto; padding:0 1rem}
-h1{font-size:2.2rem; margin: 1rem 0}
-label{display:block; font-weight:700; margin:.6rem 0 .25rem}
-select,input,button,textarea{
-  width:100%; padding:.7rem .8rem; border-radius:12px; border:1px solid #eab3c2;
-  outline:none; background:#fff; font-size:14px;
-}
-button{
-  cursor:pointer; font-weight:800;
-  background: var(--light-pink); border:1px solid #ff9eb2; color:#2b1f25;
-}
-.row{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
-@media (max-width:760px){ .row{grid-template-columns:1fr} }
-.center{display:flex; gap:.75rem; align-items:center}
+.grid{display:grid; gap:14px}
+.row{display:grid; grid-template-columns:160px 1fr; gap:12px; align-items:center}
+select,input{width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--ring); background:#fff;}
+hr{border:0; height:1px; background:var(--pink-champagne); margin:18px 0}
+h1{font-size:40px; margin:10px 0 4px}
+h2{margin:0 0 12px}
+.small{font-size:12px; opacity:.7}
+.actions{display:flex; gap:10px; margin-top:14px}
