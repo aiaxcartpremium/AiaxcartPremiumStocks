@@ -1,69 +1,48 @@
+// app/login/page.tsx
 'use client';
 
-import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
-
-export default function Login() {
-  const [email,setEmail]=useState(''); const [password,setPassword]=useState('');
-  const r = useRouter()
-
-  async function signIn(e:any){
-    e.preventDefault()
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return alert(error.message)
-
-    const { data: prof } = await supabase.from('profiles').select('role').single()
-    r.push(prof?.role === 'owner' ? '/owner' : '/admin')
-  }
-
-  return (/* your pretty form; onSubmit={signIn} */)
-}
-// Make /login dynamic (no static pre-render)
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
-function LoginInner() {
-  const search = useSearchParams();
-  const error = search.get('error'); // example use
-
-  return (
-    <div className="p-6 max-w-sm mx-auto">
-      {error ? (
-        <p className="mb-3 rounded bg-red-50 text-red-700 px-3 py-2 text-sm">
-          {error}
-        </p>
-      ) : null}
-
-      {/* your actual login form here */}
-      <form className="space-y-3">
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full border rounded px-3 py-2"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full border rounded px-3 py-2"
-        />
-        <button
-          type="submit"
-          className="w-full rounded px-3 py-2 bg-pink-500 text-white"
-        >
-          Sign in
-        </button>
-      </form>
-    </div>
-  );
-}
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const search = useSearchParams();
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { setBusy(false); alert(error.message); return; }
+
+    // Fetch role from profiles
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+
+    const next = search.get('next');
+    setBusy(false);
+
+    if (next) router.replace(next);
+    else if (prof?.role === 'owner') router.replace('/owner');
+    else router.replace('/admin');
+  }
+
   return (
-    <Suspense fallback={<div className="p-6">Loading…</div>}>
-      <LoginInner />
-    </Suspense>
+    <main className="container">
+      <h1 className="title">Login</h1>
+      <form onSubmit={onSubmit} className="card">
+        <label>Email</label>
+        <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required />
+        <label>Password</label>
+        <input type="password" value={password} onChange={e=>setPassword(e.target.value)} required />
+        <button disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+      </form>
+    </main>
   );
 }
