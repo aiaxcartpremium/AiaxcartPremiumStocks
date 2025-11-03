@@ -1,77 +1,46 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { CATALOG } from '@/lib/catalog'
-import type { Stock } from '@/lib/types'
 
-function nameFor(key:string){ return CATALOG.find(c=>c.key===key)?.label ?? key }
+type Row={id:string,product_key:string,account_type:string,term_days:number,price:number|null,expires_at:string|null,quantity:number}
 
 export default function AdminPage(){
-  const [authed,setAuthed]=useState(false)
-  const [rows,setRows]=useState<Stock[]>([])
+  const [rows,setRows]=useState<Row[]>([])
   const [loading,setLoading]=useState(true)
 
   useEffect(()=>{
     supabase.auth.getSession().then(async ({data})=>{
-      setAuthed(!!data.session)
-      if(!data.session) return
-      const { data:stocks, error } = await supabase.from('stocks')
-        .select('id,product_key,account_type,term_days,price,expires_at,quantity')
-        .order('expires_at', { ascending:true })
-      if(error){ alert(error.message);return }
-      setRows(stocks as any); setLoading(false)
+      if(!data.session){ location.href='/login?next=/admin'; return }
+      const { data: stocks, error } = await supabase.from('stocks').select('id,product_key,account_type,term_days,price,expires_at,quantity').order('expires_at',{ascending:true})
+      if(error){ alert(error.message) }
+      setRows(stocks||[]); setLoading(false)
     })
   },[])
 
   async function getAccount(id:string){
     try{
-      const { data, error } = await supabase.from('stocks').select('*').eq('id', id).single()
+      const { data, error } = await supabase.rpc('admin_grant_and_decrement', { stock_id:id })
       if(error) throw error
-      if(!data){ alert('Not found'); return }
-      const creds = `Email: ${data.email||'-'}\nPassword: ${data.password||'-'}\nProfile: ${data.profile||'-'}\nPIN: ${data.pin||'-'}`
-      alert(creds)
-      const newQty = Math.max(0, (data.quantity||1)-1)
-      if(newQty===0){
-        await supabase.from('stocks').delete().eq('id', id)
-      }else{
-        await supabase.from('stocks').update({ quantity:newQty }).eq('id', id)
-      }
-      const { data:stocks2 } = await supabase.from('stocks')
-        .select('id,product_key,account_type,term_days,price,expires_at,quantity').order('expires_at',{ascending:true})
-      setRows(stocks2 as any)
-    }catch(err:any){
-      alert(err.message||'Grant failed')
-    }
+      alert(`Credentials:\nEmail: ${data?.email||'-'}\nPassword: ${data?.password||'-'}\nProfile: ${data?.profile||'-'}\nPIN: ${data?.pin||'-'}`)
+      const { data: stocks } = await supabase.from('stocks').select('id,product_key,account_type,term_days,price,expires_at,quantity').order('expires_at',{ascending:true})
+      setRows(stocks||[])
+    }catch(e:any){ alert(e.message) }
   }
 
-  return (
-    <main className="grid">
-      <h1 className="h1">Admin Panel</h1>
-      {!authed && <div className="alert">You are not logged in. Go to <a href="/login">Login</a>.</div>}
-      {loading? <div>Loading...</div>:
-        rows.length===0? <div>No stocks yet</div>:
-        <table className="table">
-          <thead><tr>
-            <th>Product</th><th>Type</th><th>Term</th><th>Price</th><th>Expires</th><th>Qty</th><th></th>
-          </tr></thead>
-          <tbody>
-            {rows.map(r=>(
-              <tr key={r.id}>
-                <td>{nameFor(r.product_key)}</td>
-                <td>{r.account_type.replace('_',' ')}</td>
-                <td>{r.term_days}d</td>
-                <td>{r.price ?? '-'}</td>
-                <td>{new Date(r.expires_at).toISOString().slice(0,10)}</td>
-                <td>{r.quantity}</td>
-                <td><button className="btn primary" onClick={()=>getAccount(r.id)}>Get Account</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      }
-      <div style={{display:'flex', gap:8, marginTop:12}}>
-        <a className="btn" href="/login">Logout / Switch</a>
-      </div>
-    </main>
-  )
+  return (<section className="card">
+    <h1>Admin Panel</h1>
+    {loading ? <p>Loading...</p> : rows.length===0 ? <p>No stocks yet</p> : (
+      <table><thead><tr><th>Product</th><th>Type</th><th>Term</th><th>Price</th><th>Expires</th><th>Qty</th><th></th></tr></thead>
+      <tbody>
+        {rows.map(r=>(
+          <tr key={r.id}>
+            <td>{r.product_key}</td><td>{r.account_type.replace('_',' ')}</td><td>{r.term_days}d</td>
+            <td>{r.price ?? '-'}</td><td>{r.expires_at ?? '-'}</td><td>{r.quantity}</td>
+            <td><button className="btn" onClick={()=>getAccount(r.id)} disabled={r.quantity<=0}>Get Account</button></td>
+          </tr>
+        ))}
+      </tbody></table>
+    )}
+    <div className="actions" style={{marginTop:12}}><a className="btn ghost" href="/">Back</a></div>
+  </section>)
 }

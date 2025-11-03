@@ -1,1 +1,2 @@
-export default { reactStrictMode: false }
+const nextConfig = { output: 'export' };
+export default nextConfig;

@@ -1,25 +1,17 @@
 {
-  "name": "aiaxcart-premium-shop",
+  "name": "aiaxcart-premium-stocks",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "build": "next build && next export",
+    "start": "next start"
   },
   "dependencies": {
-    "next": "14.1.0",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "@supabase/supabase-js": "2.45.4",
-    "papaparse": "5.4.1"
-  },
-  "devDependencies": {
-    "typescript": "5.4.5",
-    "@types/node": "20.11.28",
-    "@types/react": "18.2.73",
-    "@types/react-dom": "18.2.24"
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@supabase/supabase-js": "2.45.4"
   }
 }

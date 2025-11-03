@@ -2,100 +2,73 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { CATALOG } from '@/lib/catalog'
-import { TERM_OPTIONS, termToDays, addDaysISO } from '@/lib/date'
+
+const ACCOUNT_TYPES = ['shared_profile','solo_profile','shared_account','solo_account'] as const
+const TERM_OPTIONS = [
+  {label:'7 days', days:7},{label:'14 days', days:14},
+  {label:'1 month', days:30},{label:'2 months', days:60},{label:'3 months', days:90},
+  {label:'4 months', days:120},{label:'5 months', days:150},{label:'6 months', days:180},
+  {label:'7 months', days:210},{label:'8 months', days:240},{label:'9 months', days:270},
+  {label:'10 months', days:300},{label:'11 months', days:330},{label:'12 months', days:360},
+]
 
 export default function OwnerPage(){
-  const [authed,setAuthed] = useState(false)
-  const [prod,setProd]=useState('')
-  const [acct,setAcct]=useState<'shared_profile'|'solo_profile'|'shared_acc'|'solo_acc'>('shared_profile')
-  const [term,setTerm]=useState('1m')
-  const [price,setPrice]=useState('')
+  const [product,setProduct]=useState('')
+  const [accountType,setAccountType]=useState<typeof ACCOUNT_TYPES[number]>('shared_profile')
+  const [term,setTerm]=useState(30)
+  const [price,setPrice]=useState<number|''>('')
   const [email,setEmail]=useState('')
   const [password,setPassword]=useState('')
   const [profile,setProfile]=useState('')
   const [pin,setPin]=useState('')
-  const [qty,setQty]=useState(1)
+  const [quantity,setQuantity]=useState(1)
   const [notes,setNotes]=useState('')
 
+  const expiresOn = useMemo(()=>{ const d=new Date(); d.setDate(d.getDate()+Number(term||0)); return d.toISOString().slice(0,10) },[term])
+
   useEffect(()=>{
-    supabase.auth.getSession().then(({data})=>{
-      setAuthed(!!data.session)
-    })
+    supabase.auth.getSession().then(({data})=>{ if(!data.session){ location.href='/login?next=/owner' } })
   },[])
 
-  const expISO = useMemo(()=> addDaysISO(termToDays(term)), [term])
-  const expPretty = new Date(expISO).toISOString().slice(0,10)
-
-  async function submit(){
+  async function addStock(){
     try{
-      if(!authed){ alert('Please login first.'); return }
-      if(!prod){ alert('Please select product'); return }
-      const term_days = termToDays(term)
-      const { error } = await supabase.from('stocks').insert({
-        product_key: prod,
-        account_type: acct,
-        term_days,
-        price: price? Number(price): null,
-        email: email || null,
-        password: password || null,
-        profile: profile || null,
-        pin: pin || null,
-        quantity: qty,
-        notes: notes || null,
-        expires_at: expISO
-      })
+      const payload:any={ product_key:product, account_type:accountType, term_days:term,
+        price: price===''? null:Number(price), email,password,profile,pin, notes, quantity }
+      const { error } = await supabase.rpc('add_stock_one', payload)
       if(error) throw error
-      alert('Stock added!')
-      setEmail('');setPassword('');setProfile('');setPin('');setPrice('');setQty(1);setNotes('')
-    }catch(err:any){
-      alert(err.message||'Insert failed')
-    }
+      alert('Added!')
+      setEmail(''); setPassword(''); setProfile(''); setPin(''); setNotes('')
+    }catch(e:any){ alert(e.message) }
   }
 
-  return (
-    <main className="grid" style={{maxWidth:720}}>
-      <h1 className="h1">Owner Panel</h1>
-      {!authed && <div className="alert">You are not logged in. Go to <a href="/login">Login</a>.</div>}
-      <label>Product</label>
-      <select value={prod} onChange={e=>setProd(e.target.value)} className="input">
-        <option value="">Select product</option>
-        {CATALOG.map(p=>(<option value={p.key} key={p.key}>{p.label}</option>))}
-      </select>
-
-      <label>Account type</label>
-      <select value={acct} onChange={e=>setAcct(e.target.value as any)} className="input">
-        <option value="shared_profile">Shared profile</option>
-        <option value="solo_profile">Solo profile</option>
-        <option value="shared_acc">Shared acc</option>
-        <option value="solo_acc">Solo acc</option>
-      </select>
-
-      <label>Term</label>
-      <select value={term} onChange={e=>setTerm(e.target.value)} className="input">
-        {TERM_OPTIONS.map(t=>(<option key={t.key} value={t.key}>{t.label}</option>))}
-      </select>
-
-      <div style={{fontWeight:800, marginTop:8}}>Expires on: {expPretty}</div>
-
-      <label>Price (optional)</label>
-      <input className="input" value={price} onChange={e=>setPrice(e.target.value)} />
-      <label>Email (optional)</label>
-      <input className="input" value={email} onChange={e=>setEmail(e.target.value)} />
-      <label>Password (optional)</label>
-      <input className="input" value={password} onChange={e=>setPassword(e.target.value)} />
-      <label>Profile (optional)</label>
-      <input className="input" value={profile} onChange={e=>setProfile(e.target.value)} />
-      <label>PIN (optional)</label>
-      <input className="input" value={pin} onChange={e=>setPin(e.target.value)} />
-      <label>Quantity (optional)</label>
-      <input className="input" type="number" value={qty} onChange={e=>setQty(Number(e.target.value||1))} />
-      <label>Notes (optional)</label>
-      <input className="input" value={notes} onChange={e=>setNotes(e.target.value)} />
-
-      <div style={{display:'flex', gap:8}}>
-        <button className="btn primary" onClick={submit}>Add Stock</button>
-        <a className="btn" href="/login">Logout / Switch</a>
-      </div>
-    </main>
-  )
+  return (<section className="card">
+    <h1>Owner Panel</h1>
+    <div className="grid">
+      <div><label>Product</label>
+        <select value={product} onChange={e=>setProduct(e.target.value)}>
+          <option value="">Select product</option>
+          {CATALOG.map(c=>(<option key={c.key} value={c.key}>{c.label}</option>))}
+        </select></div>
+      <div><label>Account type</label>
+        <select value={accountType} onChange={e=>setAccountType(e.target.value as any)}>
+          {ACCOUNT_TYPES.map(a=>(<option key={a} value={a}>{a.replace('_',' ')}</option>))}
+        </select></div>
+      <div><label>Term</label>
+        <select value={String(term)} onChange={e=>setTerm(Number(e.target.value))}>
+          {TERM_OPTIONS.map(t=>(<option key={t.days} value={t.days}>{t.label}</option>))}
+        </select></div>
+      <div><strong>Expires on:</strong> {expiresOn}</div>
+      <div><label>Price (optional)</label><input inputMode="decimal" value={price} onChange={e=>setPrice(e.target.value===''?'':Number(e.target.value))}/></div>
+      <div><label>Email (optional)</label><input value={email} onChange={e=>setEmail(e.target.value)}/></div>
+      <div><label>Password (optional)</label><input value={password} onChange={e=>setPassword(e.target.value)}/></div>
+      <div><label>Profile (optional)</label><input value={profile} onChange={e=>setProfile(e.target.value)}/></div>
+      <div><label>PIN (optional)</label><input value={pin} onChange={e=>setPin(e.target.value)}/></div>
+      <div><label>Quantity (optional)</label><input inputMode="numeric" value={String(quantity)} onChange={e=>setQuantity(Number(e.target.value)||1)}/></div>
+      <div><label>Notes (optional)</label><input value={notes} onChange={e=>setNotes(e.target.value)}/></div>
+    </div>
+    <div className="actions" style={{marginTop:12}}>
+      <button className="btn" onClick={addStock}>Add Stock</button>
+      <a className="btn ghost" href="/">Back</a>
+    </div>
+  </section>)
 }

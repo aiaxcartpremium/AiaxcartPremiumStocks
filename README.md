@@ -1,15 +1,10 @@
-# Aiaxcart Premium Shop
+# Aiaxcart Premium Shop (Stocks)
+Pastel‑pink Next.js + Supabase stock manager with Owner/Admin flows.
 
-Next.js 14 (app dir) + Supabase stock manager.
+## Setup
+1) In Supabase SQL editor, paste and run `supabase/01_schema.sql`.
+2) In Vercel (or local), add env vars from `.env.example` as `.env.local`.
+3) Create the two login users in Supabase Auth (emails/passwords in `.env.example`).
 
-## Quick start
-1. Create project on Vercel, import this folder.
-2. Set env vars (already included in `.env.local` but add to Vercel too).
-3. In Supabase SQL editor, run the `supabase_setup.sql` from this repo.
-4. Deploy. Use **Login → Quick login** buttons.
-
-## Pages
-- `/` Home (only Home + Login in header)
-- `/login` Login/Logout
-- `/admin` Admin panel (requires login)
-- `/owner` Owner panel (requires login)
+## Deploy to Vercel
+- Import the repo, set env vars, and deploy.
