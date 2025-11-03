@@ -10,7 +10,9 @@ const TERM_OPTIONS = [
   {label:'7 months', days:210},{label:'8 months', days:240},{label:'9 months', days:270},
   {label:'10 months', days:300},{label:'11 months', days:330},{label:'12 months', days:360},
 ]
-
+// app/admin/page.tsx  (and same idea for /owner)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 export default function OwnerPage(){
   const [product,setProduct]=useState('')
   const [accountType,setAccountType]=useState<typeof ACCOUNT_TYPES[number]>('shared_profile')
