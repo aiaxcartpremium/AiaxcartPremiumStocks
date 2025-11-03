@@ -1,14 +1,13 @@
 {
-  "name": "aiaxcart-premium-shop",
+  "name": "aiaxcart-premium-stocks",
   "private": true,
-  "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
+  {
   "dependencies": {
     "next": "14.2.5",
     "react": "18.3.1",
@@ -18,10 +17,9 @@
   },
   "devDependencies": {
     "typescript": "5.6.3",
-    "@types/node": "20.11.30",
-    "@types/react": "18.3.3",
+    "@types/node": "20.12.12",
+    "@types/react": "18.3.5",
     "@types/react-dom": "18.3.0",
-    "eslint": "8.57.0",
-    "eslint-config-next": "14.2.5"
+    "eslint": "8.57.0"
   }
 }
