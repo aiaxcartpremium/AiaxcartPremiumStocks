@@ -1,74 +1,69 @@
 'use client';
+
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '../../lib/supabaseClient';
 
 type Row = {
   id: string;
-  product: string;
-  account_type: string;   // column exists in your new schema
-  term: string;
-  price: number | null;
-  expires_at: string | null;
-  qty: number;
+  product_key: string;
+  account_type: string;
+  term_months: number;
+  price?: number|null;
+  expires_at?: string|null;
+  qty?: number|null;
 };
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 export default function AdminPage(){
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [rows,setRows]=useState<Row[]>([]);
+  const [loading,setLoading]=useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) { window.location.href = '/login?next=/admin'; return; }
-
+  useEffect(()=>{
+    let cancelled=false;
+    (async()=>{
+      const { data: session } = await supabase.auth.getSession();
+      if(!session?.session){ window.location.href='/login?next=/admin'; return; }
       const { data: stocks, error } = await supabase
         .from('stocks')
-        .select('id, product, account_type, term, price, expires_at, qty')
-        .order('expires_at', { ascending: true });
+        .select('id,product_key,account_type,term_months,price,expires_at,qty')
+        .order('created_at', { ascending:false })
+        .limit(50);
+      if(error) alert(error.message);
+      if(!cancelled){ setRows(stocks ?? []); setLoading(false); }
+    })();
+    return ()=>{cancelled=true};
+  },[]);
 
-      if (error) alert(error.message);
-      if (!cancelled) {
-        setRows(stocks ?? []);
-        setLoading(false);
-      }
-    });
-
-    return () => { cancelled = true; };
-  }, []);
-
-  async function getAccount(id: string) {
-    const { data, error } = await supabase.rpc('admin_grant_and_decrement', { p_stock_id: id });
-    if (error) return alert(error.message);
-    alert(`Credentials:\n${JSON.stringify(data, null, 2)}`);
-    // refresh list
-    const { data: stocks } = await supabase
-      .from('stocks')
-      .select('id, product, account_type, term, price, expires_at, qty')
-      .order('expires_at', { ascending: true });
-    setRows(stocks ?? []);
+  async function getAccount(id:string){
+    // Here you’d call your RPC (e.g., admin_grant_and_decrement)
+    alert('Get Account clicked for '+id+' (wire your RPC here)');
   }
 
   return (
     <div className="card">
-      <h1 className="h1">Admin Panel</h1>
-      {loading ? 'Loading…' : rows.length === 0 ? 'No stocks yet' : (
-        <div className="row">
-          {rows.map(r => (
-            <div className="card" key={r.id}>
-              <div className="h2">{r.product} · {r.account_type}</div>
-              <div>Term: {r.term} • Qty: {r.qty} • Expires: {r.expires_at ?? '—'}</div>
-              <div className="actions" style={{marginTop:10}}>
-                <button className="btn" onClick={()=>getAccount(r.id)}>Get Account</button>
-              </div>
+      <h1>Admin Panel</h1>
+      <div className="actions">
+        <a className="btn ghost pill" href="/">Back</a>
+        <a className="btn ghost pill" href="/login">Logout / Switch</a>
+      </div>
+      <hr/>
+      {loading ? 'Loading…' :
+        rows.length===0 ? 'No stocks yet' :
+        <div className="grid">
+          <div className="row" style={{gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr 120px', fontWeight:800}}>
+            <div>Product</div><div>Type</div><div>Term</div><div>Price</div><div>Expires</div><div>Actions</div>
+          </div>
+          {rows.map(r=>(
+            <div key={r.id} className="row" style={{gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr 120px'}}>
+              <div>{r.product_key}</div>
+              <div>{r.account_type}</div>
+              <div>{r.term_months} mo</div>
+              <div>{r.price ?? '—'}</div>
+              <div>{r.expires_at ?? '—'}</div>
+              <div><button className="btn pill" onClick={()=>getAccount(r.id)}>Get Account</button></div>
             </div>
           ))}
         </div>
-      )}
-      <a className="back" href="/">← Back</a>
+      }
     </div>
   );
 }
