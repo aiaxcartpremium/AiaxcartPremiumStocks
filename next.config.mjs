@@ -1,5 +1,10 @@
+// next.config.mjs
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: { serverActions: { bodySizeLimit: '2mb' } }
+  reactStrictMode: true,
+  experimental: {
+    // keep whatever experimental flags you had, or leave empty
+  },
 };
+
 export default nextConfig;
