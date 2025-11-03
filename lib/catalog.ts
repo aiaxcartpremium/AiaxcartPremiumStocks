@@ -1,52 +1,63 @@
-export type ProductKey = string;
+export type Product = { key: string; label: string; category: string; }
+export const CATALOG: Product[] = [
+  { key:'netflix', label:'Netflix', category:'entertainment' },
+  { key:'viu', label:'Viu', category:'entertainment' },
+  { key:'vivamax', label:'Vivamax', category:'entertainment' },
+  { key:'vivaone', label:'Viva One', category:'entertainment' },
+  { key:'vivabundle', label:'Viva Bundle', category:'entertainment' },
+  { key:'disney+', label:'Disney+', category:'entertainment' },
+  { key:'bilibili', label:'Bilibili', category:'entertainment' },
+  { key:'iqiyi', label:'iQIYI', category:'entertainment' },
+  { key:'wetv', label:'WeTV', category:'entertainment' },
+  { key:'loklok', label:'Loklok', category:'entertainment' },
+  { key:'iwanttfc', label:'iWantTFC', category:'entertainment' },
+  { key:'amazon-prime', label:'Amazon Prime', category:'entertainment' },
+  { key:'crunchyroll', label:'Crunchyroll', category:'entertainment' },
+  { key:'hbo-max', label:'HBO Max', category:'entertainment' },
+  { key:'youku', label:'Youku', category:'entertainment' },
+  { key:'nba-league-pass', label:'NBA League Pass', category:'entertainment' },
+  { key:'spotify', label:'Spotify', category:'streaming' },
+  { key:'youtube', label:'YouTube', category:'streaming' },
+  { key:'apple-music', label:'Apple Music', category:'streaming' },
+  { key:'studocu', label:'Studocu', category:'educational' },
+  { key:'scribd', label:'Scribd', category:'educational' },
+  { key:'grammarly', label:'Grammarly', category:'educational' },
+  { key:'quillbot', label:'QuillBot', category:'educational' },
+  { key:'ms365', label:'MS 365', category:'educational' },
+  { key:'quizlet+', label:'Quizlet+', category:'educational' },
+  { key:'camscanner', label:'CamScanner', category:'educational' },
+  { key:'smallpdf', label:'Smallpdf', category:'educational' },
+  { key:'turnitin-student', label:'Turnitin Student', category:'educational' },
+  { key:'turnitin-instructor', label:'Turnitin Instructor', category:'educational' },
+  { key:'duolingo-super', label:'Duolingo Super', category:'educational' },
+  { key:'canva', label:'Canva', category:'editing' },
+  { key:'picsart', label:'Picsart', category:'editing' },
+  { key:'capcut', label:'CapCut', category:'editing' },
+  { key:'remini-web', label:'Remini Web', category:'editing' },
+  { key:'alight-motion', label:'Alight Motion', category:'editing' },
+  { key:'chatgpt', label:'ChatGPT', category:'ai' },
+  { key:'gemini-ai', label:'Gemini AI', category:'ai' },
+  { key:'blackbox-ai', label:'Blackbox AI', category:'ai' },
+  { key:'perplexity', label:'Perplexity', category:'ai' }
+]
 
-export const CATALOG: { key: ProductKey; label: string; category: string }[] = [
-  // entertainment
-  { key: 'netflix', label: 'Netflix', category: 'entertainment' },
-  { key: 'viu', label: 'Viu', category: 'entertainment' },
-  { key: 'vivamax', label: 'Vivamax', category: 'entertainment' },
-  { key: 'vivaone', label: 'VivaOne', category: 'entertainment' },
-  { key: 'vivabundle', label: 'VivaBundle', category: 'entertainment' },
-  { key: 'disney_plus', label: 'Disney+', category: 'entertainment' },
-  { key: 'bilibili', label: 'Bilibili', category: 'entertainment' },
-  { key: 'iqiyi', label: 'iQIYI', category: 'entertainment' },
-  { key: 'wetv', label: 'WeTV', category: 'entertainment' },
-  { key: 'loklok', label: 'Loklok', category: 'entertainment' },
-  { key: 'iwanttfc', label: 'iWantTFC', category: 'entertainment' },
-  { key: 'amazon_prime', label: 'Amazon Prime', category: 'entertainment' },
-  { key: 'crunchyroll', label: 'Crunchyroll', category: 'entertainment' },
-  { key: 'hbo_max', label: 'HBO Max', category: 'entertainment' },
-  { key: 'youku', label: 'Youku', category: 'entertainment' },
-  { key: 'nba_league_pass', label: 'NBA League Pass', category: 'entertainment' },
+export const ACCOUNT_TYPES = [
+  'Shared profile','Solo profile','Shared account','Solo account'
+] as const
 
-  // streaming
-  { key: 'spotify', label: 'Spotify', category: 'streaming' },
-  { key: 'youtube', label: 'YouTube', category: 'streaming' },
-  { key: 'apple_music', label: 'Apple Music', category: 'streaming' },
-
-  // educational
-  { key: 'studocu', label: 'Studocu', category: 'educational' },
-  { key: 'scribd', label: 'Scribd', category: 'educational' },
-  { key: 'grammarly', label: 'Grammarly', category: 'educational' },
-  { key: 'quillbot', label: 'QuillBot', category: 'educational' },
-  { key: 'ms365', label: 'MS 365', category: 'educational' },
-  { key: 'quizlet_plus', label: 'Quizlet+', category: 'educational' },
-  { key: 'camscanner', label: 'CamScanner', category: 'educational' },
-  { key: 'smallpdf', label: 'SmallPDF', category: 'educational' },
-  { key: 'turnitin_student', label: 'Turnitin Student', category: 'educational' },
-  { key: 'turnitin_instructor', label: 'Turnitin Instructor', category: 'educational' },
-  { key: 'duolingo_super', label: 'Duolingo Super', category: 'educational' },
-
-  // editing
-  { key: 'canva', label: 'Canva', category: 'editing' },
-  { key: 'picsart', label: 'Picsart', category: 'editing' },
-  { key: 'capcut', label: 'CapCut', category: 'editing' },
-  { key: 'remini_web', label: 'Remini Web', category: 'editing' },
-  { key: 'alight_motion', label: 'Alight Motion', category: 'editing' },
-
-  // ai
-  { key: 'chatgpt', label: 'ChatGPT', category: 'ai' },
-  { key: 'gemini_ai', label: 'Gemini AI', category: 'ai' },
-  { key: 'blackbox_ai', label: 'Blackbox AI', category: 'ai' },
-  { key: 'perplexity', label: 'Perplexity', category: 'ai' }
-];
+export const TERM_OPTS = [
+  { key:'7d', days:7, label:'7 days' },
+  { key:'14d', days:14, label:'14 days' },
+  { key:'1m', days:30, label:'1 month' },
+  { key:'2m', days:60, label:'2 months' },
+  { key:'3m', days:90, label:'3 months' },
+  { key:'4m', days:120, label:'4 months' },
+  { key:'5m', days:150, label:'5 months' },
+  { key:'6m', days:180, label:'6 months' },
+  { key:'7m', days:210, label:'7 months' },
+  { key:'8m', days:240, label:'8 months' },
+  { key:'9m', days:270, label:'9 months' },
+  { key:'10m', days:300, label:'10 months' },
+  { key:'11m', days:330, label:'11 months' },
+  { key:'12m', days:360, label:'12 months' },
+]
