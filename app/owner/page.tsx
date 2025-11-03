@@ -1,131 +1,80 @@
 'use client';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { TERMS, ACCOUNT_TYPES } from '@/lib/catalog';
 
-type Option = { value:string; label:string };
+const ACCOUNT_TYPES = ['shared profile','solo profile','shared account','solo account'] as const;
+const TERMS = ['7d','14d','1 month','2 months','3 months','4 months','5 months','6 months','7 months','8 months','9 months','10 months','11 months','12 months'] as const;
 
 export default function OwnerPage(){
-  const [authed,setAuthed]=useState(false);
-  const [products,setProducts]=useState<Option[]>([]);
-  const [product,setProduct]=useState('');
-  const [acct,setAcct]=useState(ACCOUNT_TYPES[0].value);
-  const [term,setTerm]=useState('1m');
-  const [price,setPrice]=useState<number|''>('');
-  const [email,setEmail]=useState(''); const [password,setPassword]=useState('');
-  const [profile,setProfile]=useState(''); const [pin,setPin]=useState('');
-  const [qty,setQty]=useState(1); const [notes,setNotes]=useState('');
-useEffect(() => {
-  let cancelled = false;
+  const [authed, setAuthed] = useState(false);
+  const [product, setProduct] = useState('');
+  const [accountType, setAccountType] = useState<typeof ACCOUNT_TYPES[number]>('shared profile');
+  const [term, setTerm] = useState<typeof TERMS[number]>('1 month');
+  const [price, setPrice] = useState<number | ''>('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [profile, setProfile] = useState('');
+  const [pin, setPin] = useState('');
+  const [qty, setQty] = useState<number>(1);
+  const [notes, setNotes] = useState('');
 
-  (async () => {
-    // 👇 no implicit-any errors
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
-      window.location.href = '/login?next=/admin';
-      return;
-    }
-
-    const { data: stocks, error } = await supabase
-      .from('stocks')
-      .select('id,product_key,account_type,term,price,expires_at,quantity')
-      .order('expires_at', { ascending: true });
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    if (!cancelled) {
-      setRows(stocks ?? []);
-      setLoading(false);
-    }
-  })();
-
-  return () => { cancelled = true; };
-}, []);
-  async function addStock(){
-    if(!product){ alert('Pick a product'); return; }
-    const { error } = await supabase.rpc('add_stock_one',{
-      p_product_key: product,
-      p_account_type: acct,
-      p_term: term,
-      p_price: price===''?null:Number(price),
-      p_email: email || null, p_password: password||null,
-      p_profile: profile||null, p_pin: pin||null,
-      p_qty: qty, p_notes: notes||null
+  useEffect(()=>{
+    supabase.auth.getSession().then(({ data })=>{
+      if(!data.session){ window.location.href='/login?next=/owner'; return; }
+      setAuthed(true);
     });
-    if(error){ alert(error.message); return; }
-    alert('Stock added ✔');
+  },[]);
+
+  const canSubmit = useMemo(()=> authed && product && qty>0, [authed, product, qty]);
+
+  async function addStock(){
+    const payload = {
+      product, account_type: accountType, term,
+      price: price === '' ? null : Number(price),
+      email, password, profile, pin, qty, notes
+    };
+
+    // If you created an RPC add_stock_one, call it here:
+    // const { error } = await supabase.rpc('add_stock_one', { p: payload });
+    const { error } = await supabase.from('stocks').insert(payload);
+    if(error) return alert(error.message);
+    alert('Stock added!');
   }
 
-  if(!authed) return null;
-
   return (
-    <section className="card">
-      <h1>Owner Panel</h1>
-
-      <label>Product</label>
-      <select value={product} onChange={e=>setProduct(e.target.value)}>
-        <option value="">Select product</option>
-        {products.map(p=><option key={p.value} value={p.value}>{p.label}</option>)}
-      </select>
-
-      <label>Account type</label>
-      <select value={acct} onChange={e=>setAcct(e.target.value)}>
-        {ACCOUNT_TYPES.map(t=><option key={t.value} value={t.value}>{t.label}</option>)}
-      </select>
-
-      <label>Term</label>
-      <select value={term} onChange={e=>setTerm(e.target.value)}>
-        {TERMS.map(t=><option key={t.value} value={t.value}>{t.label}</option>)}
-      </select>
-
-      <div className="row" style={{marginTop:10}}>
-        <div>
-          <label>Price (optional)</label>
-          <input value={price} onChange={e=>setPrice(e.target.value === '' ? '' : Number(e.target.value))} placeholder="e.g. 99" />
-        </div>
-        <div>
-          <label>Quantity</label>
-          <input type="number" min={1} value={qty} onChange={e=>setQty(Number(e.target.value))}/>
-        </div>
-      </div>
+    <div className="card">
+      <h1 className="h1">Owner Panel</h1>
 
       <div className="row">
-        <div>
-          <label>Email (optional)</label>
-          <input value={email} onChange={e=>setEmail(e.target.value)} />
+        <select value={product} onChange={e=>setProduct(e.target.value)} className="input">
+          <option value="">Select product</option>
+          <option>Netflix</option><option>Disney+</option><option>Spotify</option>
+          {/* (Populate via table/view later) */}
+        </select>
+
+        <select value={accountType} onChange={e=>setAccountType(e.target.value as any)} className="input">
+          {ACCOUNT_TYPES.map(t=><option key={t}>{t}</option>)}
+        </select>
+
+        <select value={term} onChange={e=>setTerm(e.target.value as any)} className="input">
+          {TERMS.map(t=><option key={t}>{t}</option>)}
+        </select>
+
+        <div className="row">
+          <input className="input" placeholder="Price (optional)" value={price} onChange={e=>setPrice(e.target.value === '' ? '' : Number(e.target.value))}/>
+          <input className="input" placeholder="Email (optional)" value={email} onChange={e=>setEmail(e.target.value)}/>
+          <input className="input" placeholder="Password (optional)" value={password} onChange={e=>setPassword(e.target.value)}/>
+          <input className="input" placeholder="Profile (optional)" value={profile} onChange={e=>setProfile(e.target.value)}/>
+          <input className="input" placeholder="PIN (optional)" value={pin} onChange={e=>setPin(e.target.value)}/>
+          <input className="input" placeholder="Quantity" value={qty} onChange={e=>setQty(Number(e.target.value)||1)}/>
+          <input className="input" placeholder="Notes (optional)" value={notes} onChange={e=>setNotes(e.target.value)}/>
         </div>
-        <div>
-          <label>Password (optional)</label>
-          <input value={password} onChange={e=>setPassword(e.target.value)} />
+
+        <div className="actions">
+          <button className="btn" onClick={addStock} disabled={!canSubmit}>Add Stock</button>
+          <a className="back" href="/">← Back</a>
         </div>
       </div>
-
-      <div className="row">
-        <div>
-          <label>Profile (optional)</label>
-          <input value={profile} onChange={e=>setProfile(e.target.value)} />
-        </div>
-        <div>
-          <label>PIN (optional)</label>
-          <input value={pin} onChange={e=>setPin(e.target.value)} />
-        </div>
-      </div>
-
-      <label>Notes (optional)</label>
-      <textarea rows={3} value={notes} onChange={e=>setNotes(e.target.value)} />
-
-      <div className="center" style={{marginTop:12}}>
-        <button onClick={addStock}>Add Stock</button>
-        <a className="pill ghost" href="/">← Back</a>
-        <form action="/logout" method="post"><button className="pill">Logout / Switch</button></form>
-      </div>
-    </section>
+    </div>
   );
 }
