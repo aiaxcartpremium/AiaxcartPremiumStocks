@@ -1,10 +1,21 @@
 :root{
-  --lavender-blush:#FFE5EC;
-  --pink-champagne:#FFC2D1;
-  --pastel-pink:#FFB3C6;
-  --light-pink:#FF8FAB;
-  --ink:#3b2d35;
+  --pink-50:#FFE5EC;    /* Lavender Blush */
+  --pink-200:#FFC2D1;   /* Pink Champagne */
+  --pink-300:#FFB3C6;   /* Pastel Pink */
+  --pink-400:#FF8FAB;   /* Light Pink */
+  --ink:#2a2a2a;
 }
+html,body{background:var(--pink-50);color:var(--ink);font-family:system-ui,Segoe UI,Roboto,Inter,sans-serif}
+.card{background:white;border:1px solid var(--pink-200);border-radius:16px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.04)}
+.pill{border-radius:20px;padding:10px 14px;border:1px solid var(--pink-200);background:#fff}
+.h1{font-size:34px;line-height:1.1;margin:18px 0}
+.h2{font-size:22px;margin:12px 0}
+.input,select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--pink-200);background:#fff}
+.row{display:grid;gap:12px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{padding:10px 14px;border-radius:14px;border:1.5px solid var(--pink-300);background:var(--pink-300)}
+.btn.secondary{background:#fff}
+.back{margin-top:6px;display:inline-block}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
