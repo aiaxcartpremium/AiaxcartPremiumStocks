@@ -1,14 +1,17 @@
-import Link from 'next/link'
+import Link from 'next/link';
 
-export default function Home(){
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+export default function HomePage(){
   return (
-    <div className="card">
-      <h1 className="h1">Welcome</h1>
+    <section className="card">
+      <h1>Welcome</h1>
       <p>Choose a portal to continue:</p>
-      <div className="row" style={{marginTop:12}}>
-        <Link className="btn" href="/admin">Admin</Link>
-        <Link className="btn ghost" href="/owner">Owner</Link>
+      <div className="center" style={{marginTop:12}}>
+        <Link className="pill" href="/admin">Admin</Link>
+        <Link className="pill ghost" href="/owner">Owner</Link>
       </div>
-    </div>
-  )
+    </section>
+  );
 }
