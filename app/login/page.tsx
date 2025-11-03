@@ -2,7 +2,25 @@
 
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabaseClient'
 
+export default function Login() {
+  const [email,setEmail]=useState(''); const [password,setPassword]=useState('');
+  const r = useRouter()
+
+  async function signIn(e:any){
+    e.preventDefault()
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) return alert(error.message)
+
+    const { data: prof } = await supabase.from('profiles').select('role').single()
+    r.push(prof?.role === 'owner' ? '/owner' : '/admin')
+  }
+
+  return (/* your pretty form; onSubmit={signIn} */)
+}
 // Make /login dynamic (no static pre-render)
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
