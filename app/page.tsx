@@ -1,14 +1,13 @@
-import Link from 'next/link';
-
-export default function Home() {
+export default function HomePage(){
   return (
     <div className="card">
-      <h1 className="h1">Welcome</h1>
+      <h1>Welcome</h1>
       <p>Choose a portal to continue:</p>
-      <div className="actions" style={{marginTop:10}}>
-        <Link className="pill" href="/admin">Admin</Link>
-        <Link className="pill" href="/owner">Owner</Link>
+      <div className="actions">
+        <a className="btn pill" href="/admin">Admin</a>
+        <a className="btn ghost pill" href="/owner">Owner</a>
       </div>
+      <p className="small">© 2025 Aiax</p>
     </div>
   );
 }
