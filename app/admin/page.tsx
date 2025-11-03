@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
-
+import { supabase } from '../../lib/supabaseClient'
+import { CATALOG } from '../../lib/catalog'
 type Row={id:string,product_key:string,account_type:string,term_days:number,price:number|null,expires_at:string|null,quantity:number}
 
 export default function AdminPage(){
