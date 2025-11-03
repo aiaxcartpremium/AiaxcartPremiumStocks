@@ -1,46 +1,84 @@
-'use client'
+// app/admin/page.tsx
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabaseClient'
-import { CATALOG } from '../../lib/catalog'
-type Row={id:string,product_key:string,account_type:string,term_days:number,price:number|null,expires_at:string|null,quantity:number}
+import { redirect } from 'next/navigation'
+import { requireSession } from '@/lib/requireSession'
+import { createClient } from '@supabase/supabase-js'
 
-export default function AdminPage(){
-  const [rows,setRows]=useState<Row[]>([])
-  const [loading,setLoading]=useState(true)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-  useEffect(()=>{
-    supabase.auth.getSession().then(async ({data})=>{
-      if(!data.session){ location.href='/login?next=/admin'; return }
-      const { data: stocks, error } = await supabase.from('stocks').select('id,product_key,account_type,term_days,price,expires_at,quantity').order('expires_at',{ascending:true})
-      if(error){ alert(error.message) }
-      setRows(stocks||[]); setLoading(false)
-    })
-  },[])
+// Define your data structure
+type Row = {
+  id: string
+  product_key: string
+  account_type: string
+  quantity: number
+  expires_at: string | null
+}
 
-  async function getAccount(id:string){
-    try{
-      const { data, error } = await supabase.rpc('admin_grant_and_decrement', { stock_id:id })
-      if(error) throw error
-      alert(`Credentials:\nEmail: ${data?.email||'-'}\nPassword: ${data?.password||'-'}\nProfile: ${data?.profile||'-'}\nPIN: ${data?.pin||'-'}`)
-      const { data: stocks } = await supabase.from('stocks').select('id,product_key,account_type,term_days,price,expires_at,quantity').order('expires_at',{ascending:true})
-      setRows(stocks||[])
-    }catch(e:any){ alert(e.message) }
-  }
+export default async function AdminPage() {
+  // Server-side session guard
+  const { supabase, session } = await requireSession()
+  if (!session) redirect('/login?next=/admin')
 
-  return (<section className="card">
-    <h1>Admin Panel</h1>
-    {loading ? <p>Loading...</p> : rows.length===0 ? <p>No stocks yet</p> : (
-      <table><thead><tr><th>Product</th><th>Type</th><th>Term</th><th>Price</th><th>Expires</th><th>Qty</th><th></th></tr></thead>
-      <tbody>
-        {rows.map(r=>(
-          <tr key={r.id}>
-            <td>{r.product_key}</td><td>{r.account_type.replace('_',' ')}</td><td>{r.term_days}d</td>
-            <td>{r.price ?? '-'}</td><td>{r.expires_at ?? '-'}</td><td>{r.quantity}</td>
-            <td><button className="btn" onClick={()=>getAccount(r.id)} disabled={r.quantity<=0}>Get Account</button></td>
+  // Render client UI
+  return <AdminClient supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL!}
+                      anonKey={process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!} />
+}
+
+// -------- CLIENT SIDE COMPONENT --------
+function AdminClient({ supabaseUrl, anonKey }: { supabaseUrl: string, anonKey: string }) {
+  const [rows, setRows] = useState<Row[]>([])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient(supabaseUrl, anonKey)
+
+  useEffect(() => {
+    async function loadStocks() {
+      const { data: sessionData } = await supabase.auth.getSession()
+      if (!sessionData.session) {
+        window.location.href = '/login?next=/admin'
+        return
+      }
+
+      const { data: stocks, error } = await supabase
+        .from('stocks')
+        .select('id, product_key, account_type, quantity, expires_at')
+        .order('expires_at', { ascending: true })
+
+      if (error) alert(error.message)
+      else setRows(stocks || [])
+      setLoading(false)
+    }
+    loadStocks()
+  }, [supabase])
+
+  if (loading) return <p className="p-6 text-center">Loading stocks…</p>
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
+      <table className="w-full text-sm border">
+        <thead className="bg-pink-200">
+          <tr>
+            <th className="p-2 border">ID</th>
+            <th className="p-2 border">Product Key</th>
+            <th className="p-2 border">Account Type</th>
+            <th className="p-2 border">Qty</th>
+            <th className="p-2 border">Expires</th>
           </tr>
-        ))}
-      </tbody></table>
-    )}
-    <div className="actions" style={{marginTop:12}}><a className="btn ghost" href="/">Back</a></div>
-  </section>)
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.id} className="odd:bg-white even:bg-pink-50">
+              <td className="p-2 border">{r.id}</td>
+              <td className="p-2 border">{r.product_key}</td>
+              <td className="p-2 border">{r.account_type}</td>
+              <td className="p-2 border">{r.quantity}</td>
+              <td className="p-2 border">{r.expires_at || '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
 }
