@@ -18,20 +18,36 @@ export default function OwnerPage(){
   const [email,setEmail]=useState(''); const [password,setPassword]=useState('');
   const [profile,setProfile]=useState(''); const [pin,setPin]=useState('');
   const [qty,setQty]=useState(1); const [notes,setNotes]=useState('');
+useEffect(() => {
+  let cancelled = false;
 
-  useEffect(()=>{
-    supabase.auth.getSession().then(async ({data})=>{
-      if(!data.session){ window.location.href='/login?next=/owner'; return; }
-      setAuthed(true);
-      const { data: items, error } = await supabase
-        .from('products')
-        .select('key,label')
-        .order('label',{ascending:true});
-      if(error){ alert(error.message); return; }
-      setProducts((items||[]).map(r=>({ value:r.key, label:r.label })));
-    });
-  },[]);
+  (async () => {
+    // 👇 no implicit-any errors
+    const { data: { session } } = await supabase.auth.getSession();
 
+    if (!session) {
+      window.location.href = '/login?next=/admin';
+      return;
+    }
+
+    const { data: stocks, error } = await supabase
+      .from('stocks')
+      .select('id,product_key,account_type,term,price,expires_at,quantity')
+      .order('expires_at', { ascending: true });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    if (!cancelled) {
+      setRows(stocks ?? []);
+      setLoading(false);
+    }
+  })();
+
+  return () => { cancelled = true; };
+}, []);
   async function addStock(){
     if(!product){ alert('Pick a product'); return; }
     const { error } = await supabase.rpc('add_stock_one',{
