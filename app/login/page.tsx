@@ -1,39 +1,34 @@
 'use client';
-
-import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [pass, setPass]   = useState('');
+  const [loading, setLoading] = useState(false);
 
-export default function LoginPage(){
-  const [email,setEmail] = useState('');
-  const [password,setPassword] = useState('');
-  const [busy,setBusy] = useState(false);
-  const router = useRouter();
-  const sp = useSearchParams();
-  const next = sp.get('next') || '/';
-
-  async function doLogin(e:React.FormEvent){
+  async function signIn(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
-    if(error){ alert(error.message); return; }
-    router.push(next);
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    setLoading(false);
+    if (error) return alert(error.message);
+    // Route by identity (admin vs owner)
+    if (email.toLowerCase() === 'admin1@aiaxcart.shop') window.location.href = '/admin';
+    else window.location.href = '/owner';
   }
 
   return (
-    <section className="card">
-      <h1>Login</h1>
-      <form onSubmit={doLogin}>
-        <label>Email</label>
-        <input value={email} onChange={e=>setEmail(e.target.value)} type="email" required />
-        <label>Password</label>
-        <input value={password} onChange={e=>setPassword(e.target.value)} type="password" required />
-        <button style={{marginTop:12}} disabled={busy}>{busy?'Logging in…':'Login'}</button>
+    <div className="card">
+      <h1 className="h1">Login</h1>
+      <form className="row" onSubmit={signIn}>
+        <input className="input" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
+        <input className="input" placeholder="Password" type="password" value={pass} onChange={e=>setPass(e.target.value)} />
+        <div className="actions">
+          <button className="btn" disabled={loading}>{loading?'Signing in…':'Login'}</button>
+          <a className="back" href="/">← Back</a>
+        </div>
       </form>
-    </section>
+    </div>
   );
 }
