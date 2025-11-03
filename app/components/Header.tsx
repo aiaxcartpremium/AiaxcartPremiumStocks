@@ -1,29 +1,41 @@
-// app/components/Header.tsx
-'use client'
-import { createClient } from '@supabase/supabase-js'
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+'use client';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 
-const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+export default function Header() {
+  const [authed, setAuthed] = useState(false);
 
-export default function Header(){
-  const [authed,setAuthed]=useState(false)
-  const router = useRouter()
-  useEffect(()=>{ sb.auth.getSession().then(({data})=>setAuthed(!!data.session)) },[])
-  async function logout(){
-    await sb.auth.signOut()
-    setAuthed(false)
-    router.replace('/')
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setAuthed(!!data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setAuthed(!!s));
+    return () => { sub.subscription.unsubscribe(); };
+  }, []);
+
+  async function logout() {
+    await supabase.auth.signOut();
+    window.location.href = '/';
   }
+
   return (
-    <div className="flex gap-3 p-4">
-      <Link href="/" className="pill px-4 py-2 bg-white/70 shadow">Home</Link>
-      {!authed ? (
-        <Link href="/login" className="pill px-4 py-2 btn-pink">Login</Link>
-      ) : (
-        <button onClick={logout} className="pill px-4 py-2 btn-pink">Logout</button>
-      )}
-    </div>
-  )
+    <header className="wrap">
+      <div className="brand">Aiaxcart Premium Shop</div>
+      <nav className="nav">
+        <Link className="btn ghost" href="/">Home</Link>
+        {!authed ? (
+          <Link className="btn pink" href="/login">Login</Link>
+        ) : (
+          <button className="btn pink" onClick={logout}>Logout</button>
+        )}
+      </nav>
+      <style jsx>{`
+        .wrap{display:flex;justify-content:space-between;align-items:center;padding:18px}
+        .brand{font-weight:800}
+        .nav{display:flex;gap:12px}
+        .btn{padding:10px 16px;border-radius:14px;border:1.5px solid var(--pink-300)}
+        .btn.ghost{background:#fff}
+        .btn.pink{background:var(--pink-300); color:#222; border-color:transparent}
+      `}</style>
+    </header>
+  );
 }
