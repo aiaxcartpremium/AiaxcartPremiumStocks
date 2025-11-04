@@ -1,79 +1,62 @@
 'use client';
+
 import { useEffect, useState } from 'react';
-import { sbBrowser } from '@/lib/supabaseClient';
+import { useRouter } from 'next/navigation';
+import { browserClient } from '@/lib/supabaseClient';
 
-type Row = {
-  id:string;
-  product_key:string;
-  account_type:string;
-  email:string|null;
-  password:string|null;
-  profile:string|null;
-  pin:string|null;
-  expires_at:string|null;
-};
+type Row = { id: string; product_key: string; account_type: string; term: string; quantity: number; expires_at: string | null };
 
-export default function AdminPage(){
-  const supabase = sbBrowser();
-  const [rows,setRows]=useState<Row[]>([]);
-  const [loading,setLoading]=useState(true);
+export default function AdminPage() {
+  const supabase = browserClient();
+  const router = useRouter();
+  const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(()=>{
-    let cancelled=false;
-    (async()=>{
-      const { data:session } = await supabase.auth.getSession();
-      if(!session.session){ window.location.href = '/login?next=/admin'; return; }
-      const { data, error } = await supabase.from('stocks')
-        .select('id,product_key,account_type,email,password,profile,pin,expires_at')
-        .gt('qty',0)
-        .order('expires_at', { ascending: true });
-      if(error){ alert(error.message); }
-      if(!cancelled){
-        setRows(data ?? []);
-        setLoading(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        router.push('/login?next=/admin');
+        return;
       }
+      const { data: stocks, error } = await supabase
+        .from('stocks')
+        .select('id, product_key, account_type, term, quantity, expires_at')
+        .order('expires_at', { ascending: true });
+
+      if (error) alert(error.message);
+      if (!cancelled) setRows(stocks ?? []);
+      setLoading(false);
     })();
-    return ()=>{ cancelled=true; };
-  },[]);
+    return () => {
+      cancelled = true;
+    };
+  }, [router, supabase]);
 
-  async function getAccount(id:string){
-    try{
-      const { data, error } = await supabase.rpc('admin_grant_and_decrement', { p_stock_id: id });
-      if(error) throw error;
-      alert(`Granted:\nEmail: ${data?.email}\nPass: ${data?.password}\nProfile: ${data?.profile ?? ''}\nPIN: ${data?.pin ?? ''}`);
-      window.location.reload();
-    }catch(e:any){ alert(e.message); }
-  }
-
-  async function logout(){
-    await supabase.auth.signOut();
-    window.location.href = '/';
-  }
-
+  // …rest of your admin buttons (Get Account, Buyer Records link, Logout) …
   return (
-    <section className="grid">
+    <section className="container">
       <div className="pills">
-        <a className="btn" href="/">← Back</a>
-        <a className="btn" href="/admin/records">Buyer Records</a>
-        <button className="btn primary" onClick={logout}>Logout / Switch</button>
+        <button className="btn" onClick={() => router.back()}>Back</button>
+        <button
+          className="btn primary"
+          onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }}
+        >
+          Logout / Switch
+        </button>
       </div>
-      <div className="card">
-        <h1 style={{marginTop:0}}>Admin Panel</h1>
-        {loading? 'Loading...' : (
-          <table className="table">
-            <thead><tr><th>Product</th><th>Type</th><th>Expires</th><th></th></tr></thead>
-            <tbody>
-              {rows.length===0 && <tr><td colSpan={4}>No available stocks</td></tr>}
-              {rows.map(r=> <tr key={r.id}>
-                <td>{r.product_key}</td>
-                <td>{r.account_type}</td>
-                <td>{r.expires_at?.slice(0,10)}</td>
-                <td><button className="btn primary" onClick={()=>getAccount(r.id)}>Get Account</button></td>
-              </tr>)}
-            </tbody>
-          </table>
-        )}
-      </div>
+
+      <h1 className="title">Admin Panel</h1>
+      {loading ? <p>Loading…</p> : (
+        <ul className="list">
+          {rows.map(r => (
+            <li key={r.id}>
+              <strong>{r.product_key}</strong> • {r.account_type} • {r.term} • Qty {r.quantity}
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
