@@ -1,69 +1,79 @@
 'use client';
-
 import { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { sbBrowser } from '@/lib/supabaseClient';
 
 type Row = {
-  id: string;
-  product_key: string;
-  account_type: string;
-  term_months: number;
-  price?: number|null;
-  expires_at?: string|null;
-  qty?: number|null;
+  id:string;
+  product_key:string;
+  account_type:string;
+  email:string|null;
+  password:string|null;
+  profile:string|null;
+  pin:string|null;
+  expires_at:string|null;
 };
 
 export default function AdminPage(){
+  const supabase = sbBrowser();
   const [rows,setRows]=useState<Row[]>([]);
   const [loading,setLoading]=useState(true);
 
   useEffect(()=>{
     let cancelled=false;
     (async()=>{
-      const { data: session } = await supabase.auth.getSession();
-      if(!session?.session){ window.location.href='/login?next=/admin'; return; }
-      const { data: stocks, error } = await supabase
-        .from('stocks')
-        .select('id,product_key,account_type,term_months,price,expires_at,qty')
-        .order('created_at', { ascending:false })
-        .limit(50);
-      if(error) alert(error.message);
-      if(!cancelled){ setRows(stocks ?? []); setLoading(false); }
+      const { data:session } = await supabase.auth.getSession();
+      if(!session.session){ window.location.href = '/login?next=/admin'; return; }
+      const { data, error } = await supabase.from('stocks')
+        .select('id,product_key,account_type,email,password,profile,pin,expires_at')
+        .gt('qty',0)
+        .order('expires_at', { ascending: true });
+      if(error){ alert(error.message); }
+      if(!cancelled){
+        setRows(data ?? []);
+        setLoading(false);
+      }
     })();
-    return ()=>{cancelled=true};
+    return ()=>{ cancelled=true; };
   },[]);
 
   async function getAccount(id:string){
-    // Here you’d call your RPC (e.g., admin_grant_and_decrement)
-    alert('Get Account clicked for '+id+' (wire your RPC here)');
+    try{
+      const { data, error } = await supabase.rpc('admin_grant_and_decrement', { p_stock_id: id });
+      if(error) throw error;
+      alert(`Granted:\nEmail: ${data?.email}\nPass: ${data?.password}\nProfile: ${data?.profile ?? ''}\nPIN: ${data?.pin ?? ''}`);
+      window.location.reload();
+    }catch(e:any){ alert(e.message); }
+  }
+
+  async function logout(){
+    await supabase.auth.signOut();
+    window.location.href = '/';
   }
 
   return (
-    <div className="card">
-      <h1>Admin Panel</h1>
-      <div className="actions">
-        <a className="btn ghost pill" href="/">Back</a>
-        <a className="btn ghost pill" href="/login">Logout / Switch</a>
+    <section className="grid">
+      <div className="pills">
+        <a className="btn" href="/">← Back</a>
+        <a className="btn" href="/admin/records">Buyer Records</a>
+        <button className="btn primary" onClick={logout}>Logout / Switch</button>
       </div>
-      <hr/>
-      {loading ? 'Loading…' :
-        rows.length===0 ? 'No stocks yet' :
-        <div className="grid">
-          <div className="row" style={{gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr 120px', fontWeight:800}}>
-            <div>Product</div><div>Type</div><div>Term</div><div>Price</div><div>Expires</div><div>Actions</div>
-          </div>
-          {rows.map(r=>(
-            <div key={r.id} className="row" style={{gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr 120px'}}>
-              <div>{r.product_key}</div>
-              <div>{r.account_type}</div>
-              <div>{r.term_months} mo</div>
-              <div>{r.price ?? '—'}</div>
-              <div>{r.expires_at ?? '—'}</div>
-              <div><button className="btn pill" onClick={()=>getAccount(r.id)}>Get Account</button></div>
-            </div>
-          ))}
-        </div>
-      }
-    </div>
+      <div className="card">
+        <h1 style={{marginTop:0}}>Admin Panel</h1>
+        {loading? 'Loading...' : (
+          <table className="table">
+            <thead><tr><th>Product</th><th>Type</th><th>Expires</th><th></th></tr></thead>
+            <tbody>
+              {rows.length===0 && <tr><td colSpan={4}>No available stocks</td></tr>}
+              {rows.map(r=> <tr key={r.id}>
+                <td>{r.product_key}</td>
+                <td>{r.account_type}</td>
+                <td>{r.expires_at?.slice(0,10)}</td>
+                <td><button className="btn primary" onClick={()=>getAccount(r.id)}>Get Account</button></td>
+              </tr>)}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </section>
   );
 }

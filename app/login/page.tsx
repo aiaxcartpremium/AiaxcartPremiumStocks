@@ -1,50 +1,57 @@
 'use client';
-
 import { useState } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { sbBrowser } from '@/lib/supabaseClient';
+
+type Role = 'admin'|'owner';
 
 export default function LoginPage(){
   const [email,setEmail]=useState('');
   const [password,setPassword]=useState('');
-  const [next,setNext]=useState('/');
+  const [role,setRole]=useState<Role>('admin');
+  const [loading,setLoading]=useState(false);
+  const supabase = sbBrowser();
 
-  async function doLogin(){
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if(error) return alert(error.message);
-    window.location.href = next || '/';
+  async function onSubmit(e:React.FormEvent){
+    e.preventDefault();
+    setLoading(true);
+    try{
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+      window.location.href = role==='admin'? '/admin' : '/owner';
+    }catch(err:any){
+      alert(err.message || 'Login failed');
+    }finally{ setLoading(false); }
   }
 
-  async function doLogout(){
-    await supabase.auth.signOut();
-    alert('Logged out');
+  function quick(role:Role){
+    setRole(role);
+    if(role==='admin'){
+      setEmail(process.env.NEXT_PUBLIC_LOGIN_ADMIN_EMAIL || process.env.LOGIN_ADMIN_EMAIL || '');
+      setPassword(process.env.NEXT_PUBLIC_LOGIN_ADMIN_PASSWORD || process.env.LOGIN_ADMIN_PASSWORD || '');
+    }else{
+      setEmail(process.env.NEXT_PUBLIC_LOGIN_OWNER_EMAIL || process.env.LOGIN_OWNER_EMAIL || '');
+      setPassword(process.env.NEXT_PUBLIC_LOGIN_OWNER_PASSWORD || process.env.LOGIN_OWNER_PASSWORD || '');
+    }
   }
 
   return (
-    <div className="card grid">
-      <h1>Login</h1>
-      <div className="row"><label>Redirect after</label>
-        <select value={next} onChange={e=>setNext(e.target.value)}>
-          <option value="/">Home</option>
-          <option value="/admin">Admin</option>
-          <option value="/owner">Owner</option>
-        </select>
+    <section className="card grid">
+      <h1 style={{margin:0}}>Login</h1>
+      <div className="pills">
+        <button className="btn" onClick={()=>quick('admin')}>Use admin creds</button>
+        <button className="btn" onClick={()=>quick('owner')}>Use owner creds</button>
       </div>
-      <div className="row"><label>Email</label>
-        <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="email"/>
-      </div>
-      <div className="row"><label>Password</label>
-        <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="password"/>
-      </div>
-      <div className="actions">
-        <button className="btn pill" onClick={doLogin}>Login</button>
-        <button className="btn ghost pill" onClick={doLogout}>Logout</button>
-        <a className="btn ghost pill" href="/">Back</a>
-      </div>
-      <hr/>
-      <div className="small">Quick fill (from your message):<br/>
-        Admin: admin1@aiaxcart.shop / aiaxcartadmin123<br/>
-        Owner: shanaiamau99@gmail.com / Smfmariano09
-      </div>
-    </div>
+      <form onSubmit={onSubmit} className="grid">
+        <label>Email<input className="input" value={email} onChange={e=>setEmail(e.target.value)} required/></label>
+        <label>Password<input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} required/></label>
+        <label>Login as
+          <select className="input" value={role} onChange={e=>setRole(e.target.value as Role)}>
+            <option value="admin">Admin</option>
+            <option value="owner">Owner</option>
+          </select>
+        </label>
+        <button className="btn primary" disabled={loading}>{loading? 'Signing in...' : 'Login'}</button>
+      </form>
+    </section>
   );
 }
