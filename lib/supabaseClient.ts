@@ -1,16 +1,9 @@
-// lib/supabaseClient.ts
-import { createBrowserClient, createServerClient } from '@supabase/ssr';
+'use client';
 
-export const browserClient = () =>
-  createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+import { createClient } from '@supabase/supabase-js';
 
-// If you later need server actions, you can export a server client too:
-export const serverClient = (cookies: () => string) =>
-  createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { get: cookies } }
-  );
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
+);
