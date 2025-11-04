@@ -1,23 +1,16 @@
+// lib/supabaseClient.ts
 import { createBrowserClient, createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 
-export function sbBrowser() {
-  return createBrowserClient(
+export const browserClient = () =>
+  createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
-}
-export function sbServer() {
-  const cookieStore = cookies();
-  return createServerClient(
+
+// If you later need server actions, you can export a server client too:
+export const serverClient = (cookies: () => string) =>
+  createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) { return cookieStore.get(name)?.value; },
-        set(name, value, options) { cookieStore.set({ name, value, ...options }); },
-        remove(name, options) { cookieStore.set({ name, value: '', ...options }); }
-      }
-    }
+    { cookies: { get: cookies } }
   );
-}
